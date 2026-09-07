@@ -18,7 +18,7 @@ if [[ -f ${marker} ]]; then
 fi
 
 beta_active=false
-if [ -n "${THREAD_BETA}" ] ; then
+if [ "${THREAD_BETA}" = "1" ] ; then
     if (( marker_version < beta_auto_disable_version )); then
         echo "WARNING: Disabling beta mode automatically; the previous beta is now stable."
         export THREAD_BETA=""

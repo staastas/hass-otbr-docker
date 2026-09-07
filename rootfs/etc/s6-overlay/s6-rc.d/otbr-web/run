@@ -4,7 +4,7 @@
 # ==============================================================================
 # Start OpenThread BorderRouter web interface
 # ==============================================================================
-# shellcheck source=./openthread_border_router/rootfs/etc/s6-overlay/scripts/otbr-agent-common
+# shellcheck source=rootfs/etc/s6-overlay/scripts/otbr-agent-common
 . /etc/s6-overlay/scripts/otbr-agent-common
 
 if [ x"${OTBR_WEB:-1}" = x"0" ]; then
