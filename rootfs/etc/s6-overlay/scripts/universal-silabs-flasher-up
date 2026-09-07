@@ -1,15 +1,15 @@
 #!/usr/bin/with-contenv bash
+# shellcheck shell=bash
 # ==============================================================================
 # Start universal-silabs-flasher if requested
 # ==============================================================================
 
-declare autoflash_firmware
 declare device
 declare firmware
 declare usb_device_path
 declare usb_manufacturer
 declare usb_product
-declare gpio_reset_flag
+declare -a gpio_reset_flag
 
 function exit_no_firmware {
     echo "WARNING: No firmware found for the selected device, assuming firmware is installed."
@@ -38,14 +38,14 @@ function is_home_assistant_yellow {
 }
 
 device=$DEVICE
-gpio_reset_flag=""
+gpio_reset_flag=()
 
-if [ "$AUTOFLASH_FIRMWARE" != "1" ] ; then
+if [ x"${AUTOFLASH_FIRMWARE}" != x"1" ] ; then
     echo "INFO: Flashing firmware is disabled"
     exit 0
 fi
 
-if [ ! -z "$NETWORK_DEVICE" ]; then
+if [ -n "$NETWORK_DEVICE" ]; then
     echo "INFO: Network device is selected, skipping firmware flashing"
     exit 0
 fi
@@ -53,10 +53,10 @@ fi
 if is_home_assistant_yellow; then
     echo "INFO: Detected Home Assistant Yellow"
     firmware="yellow_openthread_rcp_2.4.4.0_GitHub-7074a43e4_gsdk_4.4.4.gbl"
-    gpio_reset_flag="--bootloader-reset yellow"
+    gpio_reset_flag=("--bootloader-reset" "yellow")
 else
     # Check device manufacturer/product information
-    usb_device_path=$(realpath /sys/class/tty/$(readlink /sys/class/tty/$(basename ${device}) | sed 's:/[^/]*tty[^/]*::g' )/../)
+    usb_device_path=$(realpath /sys/class/tty/"$(readlink /sys/class/tty/"$(basename "${device}")" | sed 's:/[^/]*tty[^/]*::g' )"/../)
     if [ ! -f "${usb_device_path}/idProduct" ]; then
         echo "INFO: The selected serial port is not a USB device."
         exit_no_firmware
@@ -77,15 +77,15 @@ else
         firmware="skyconnect_openthread_rcp_2.4.4.0_GitHub-7074a43e4_gsdk_4.4.4.gbl"
     elif [[ "${usb_manufacturer}" == "ITEAD" && "${usb_product}" == "SONOFF Zigbee 3.0 USB Dongle Plus V2" ]]; then
         firmware="ot-rcp-v2.4.2.0-zbdonglee-460800.gbl"
-        gpio_reset_flag="--bootloader-reset sonoff"
+        gpio_reset_flag=("--bootloader-reset" "sonoff")
     elif [[ "${usb_manufacturer}" == "SMLIGHT" && "${usb_product}" == "SMLIGHT SLZB-07" ]]; then
         firmware="ot-rcp-v2.4.2.0-slzb-07-460800.gbl"
-        gpio_reset_flag="--bootloader-reset slzb07"
+        gpio_reset_flag=("--bootloader-reset" "slzb07")
     else
         exit_no_firmware
     fi
 fi
 
 echo "INFO: Starting universal-silabs-flasher with ${device}"
-exec universal-silabs-flasher --device ${device}  ${gpio_reset_flag}  \
+exec universal-silabs-flasher --device "${device}" "${gpio_reset_flag[@]}" \
      flash --ensure-exact-version --allow-cross-flashing --firmware "/root/${firmware}"
